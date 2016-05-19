@@ -1,0 +1,22 @@
+{
+  "name": "xbox-controller-node-windows",
+  "version": "1.0.0",
+  "description": "Xbox 360 controller events for nodejs (using node-hid) under Windows",
+  "main": "xbox.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ScottSWu/xbox-controller-node-windows.git"
+  },
+  "author": "Scott Wu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ScottSWu/xbox-controller-node-windows/issues"
+  },
+  "homepage": "https://github.com/ScottSWu/xbox-controller-node-windows#readme",
+  "dependencies": {
+    "node-hid": "^0.5.1"
+  }
+}
