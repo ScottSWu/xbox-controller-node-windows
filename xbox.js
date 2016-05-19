@@ -30,6 +30,9 @@ var Xbox360Controller = function() {
     self.hid.on("data", function(buffer) {
         // Parse buffer
         var nextState = Xbox360Controller.parseState(buffer);
+        if (!nextState) {
+            nextState = self.state;
+        }
         var lastState = self.state;
         
         // Emit button events
@@ -106,7 +109,7 @@ Xbox360Controller.getDefaultState = function() {
 Xbox360Controller.parseState = function(buffer) {
     var state = Xbox360Controller.getDefaultState();
     if (buffer.length != 14) {
-        return state;
+        return null;
     }
     else {
         // TODO fill in the state
