@@ -1,9 +1,9 @@
-var XboxController = require("xbox.js");
+var XboxController = require("./xbox.js");
 
 var controller = new XboxController();
 
 var spaces = " "; for (var i = 0; i < 6; i++) spaces += spaces;
-function analogEvent(function(e) {
+function analogEvent(e) {
     var analogs = controller.state.analog;
     var line1 = "";
     var line2 = "";
@@ -14,7 +14,7 @@ function analogEvent(function(e) {
     }
     console.log(line1);
     console.log(line2);
-});
+}
 
 [
     "left-trigger",

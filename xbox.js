@@ -11,7 +11,7 @@ var Xbox360Controller = function() {
     
     // Obtain a controller device
     HID.devices().forEach(function(dev) {
-        if (dev && dev.product && dev.product.indexOf("controller") >= 0) {
+        if (dev && dev.product && dev.product.toLowerCase().indexOf("controller") >= 0) {
             self.hid = new HID.HID(dev.path);
         }
     });
@@ -23,7 +23,6 @@ var Xbox360Controller = function() {
     }
     
     // Set the current state
-    var config = require("xbox-config.js");
     self.state = Xbox360Controller.getDefaultState();
     
     // Set listeners
@@ -56,16 +55,21 @@ var Xbox360Controller = function() {
         }
         
         // Emit analog events
-        for (var a in nextState.analog) {
-            if (!lastState || lastState.analog[a].x != nextState.analog[a].x || lastState.analog[a].y != nextState.analog[a].y) {
-                var eventData = {
-                    "name": a,
-                    "x": nextState.analog[a].x,
-                    "y": nextState.analog[a].y
-                };
-                self.emit(a, eventData);
+        if (nextState != null) {
+            for (var a in nextState.analog) {
+                if (!lastState || lastState.analog[a].x != nextState.analog[a].x || lastState.analog[a].y != nextState.analog[a].y) {
+                    var eventData = {
+                        "name": a,
+                        "x": nextState.analog[a].x,
+                        "y": nextState.analog[a].y
+                    };
+                    self.emit(a, eventData);
+                }
             }
         }
+        
+        // Set the new state
+        self.state = nextState;
     });
     
     // Emit connect event
@@ -83,11 +87,20 @@ Xbox360Controller.getDefaultState = function() {
             "right-bumper": 0,
             "back": 0,
             "start": 0,
+            "xbox": 0,
             
             "up": 0,
             "down": 0,
             "left": 0,
-            "right": 0
+            "right": 0,
+            
+            "upright": 0,
+            "upleft": 0,
+            "downright": 0,
+            "downleft": 0,
+            
+            "left-stick": 0,
+            "right-stick": 0
         },
         "analog": {
             "left-trigger": {
@@ -112,7 +125,64 @@ Xbox360Controller.parseState = function(buffer) {
         return null;
     }
     else {
-        // TODO fill in the state
+        // Regular buttons
+        var buttons = {
+            "a": 0x1,
+            "b": 0x2,
+            "x": 0x4,
+            "y": 0x8,
+            "left-bumper": 0x10,
+            "right-bumper": 0x20,
+            "back": 0x40,
+            "start": 0x80
+            //"xbox": ??? TODO
+        };
+        for (var b in buttons) {
+            if ((buffer[10] & buttons[b]) == buttons[b]) {
+                state.buttons[b] = 1;
+            }
+            else {
+                state.buttons[b] = 0;
+            }
+        }
+        
+        // Stick buttons
+        var sticks = buffer[11] % 4;
+        if ((sticks & 0x1) == 0x1) {
+            state.buttons["left-stick"] = 1;
+        }
+        else {
+            state.buttons["left-stick"] = 0;
+        }
+        if ((sticks & 0x2) == 0x2) {
+            state.buttons["right-stick"] = 1;
+        }
+        else {
+            state.buttons["right-stick"] = 0;
+        }
+        
+        // Directional pad
+        var dpad = buffer[11] - sticks;
+        var directions = {
+            "up": 0x04,
+            "down": 0x14,
+            "left": 0x1c,
+            "right": 0x0c,
+            
+            "upright": 0x08,
+            "upleft": 0x20,
+            "downright": 0x10,
+            "downleft": 0x18
+        };
+        
+        // Analog
+        state.analog["left-trigger"].x  = (buffer[9] > 0x80) ? buffer[9] - 0x80 : 0;
+        state.analog["right-trigger"].x = (buffer[9] < 0x80) ? 0x80 - buffer[9] : 0;
+        state.analog["left-stick"].x    = buffer[0] | (buffer[1] << 8);
+        state.analog["left-stick"].y    = buffer[2] | (buffer[3] << 8);
+        state.analog["right-stick"].x   = buffer[4] | (buffer[5] << 8);
+        state.analog["right-stick"].y   = buffer[6] | (buffer[7] << 8);
+        
         return state;
     }
 };
